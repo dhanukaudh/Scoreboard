@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dhanuka Kavach Scoreboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --indigo:   #6366F1; --indigo-s: rgba(99,102,241,.1);
+  --violet:   #8B5CF6; --violet-s: rgba(139,92,246,.1);
+  --emerald:  #10B981; --emerald-s:rgba(16,185,129,.1);
+  --amber:    #F59E0B; --amber-s:  rgba(245,158,11,.1);
+  --rose:     #F43F5E; --rose-s:   rgba(244,63,94,.1);
+  --sky:      #0EA5E9; --sky-s:    rgba(14,165,233,.1);
+  --r:14px; --t:.25s cubic-bezier(.4,0,.2,1);
+}
+[data-theme="light"] {
+  --bg:#F5F6FA; --surface:#FFF; --surface2:#F0F2F8;
+  --border:#E8EBF2; --t1:#0F1117; --t2:#5B6278; --t3:#9AA1B8;
+  --sh:0 1px 3px rgba(0,0,0,.05),0 4px 16px rgba(0,0,0,.04);
+  --sh-lg:0 8px 32px rgba(0,0,0,.1);
+  --sb-bg:#FFFFFF; --sb-t1:#0F1117; --sb-t2:#5B6278; --sb-hov:#F0F2F8; --sb-act:rgba(99,102,241,.1); --sb-act-t:#6366F1; --sb-border:#E8EBF2;
+}
+[data-theme="ocean"] {
+  --bg:#EBF3FF; --surface:#FFF; --surface2:#E0ECFF;
+  --border:#C9DEFF; --t1:#0A1535; --t2:#3A5080; --t3:#7A99C8;
+  --sh:0 1px 3px rgba(10,21,53,.06),0 4px 16px rgba(10,21,53,.05);
+  --sh-lg:0 8px 32px rgba(10,21,53,.12);
+  --sb-bg:#E0ECFF; --sb-t1:#0A1535; --sb-t2:#3A5080; --sb-hov:rgba(10,21,53,.05); --sb-act:rgba(99,102,241,.15); --sb-act-t:#0A1535; --sb-border:#C9DEFF;
+}
+[data-theme="dark"] {
+  --bg:#0D0F14; --surface:#161A24; --surface2:#1C2130;
+  --border:rgba(255,255,255,.07); --t1:#EDF0F8; --t2:#8891AA; --t3:#454E68;
+  --sh:0 1px 3px rgba(0,0,0,.3),0 4px 16px rgba(0,0,0,.2);
+  --sh-lg:0 8px 40px rgba(0,0,0,.4);
+  --sb-bg:#0D0F14; --sb-t1:#EDF0F8; --sb-t2:#8891AA; --sb-hov:rgba(255,255,255,.05); --sb-act:rgba(255,255,255,.1); --sb-act-t:#FFFFFF; --sb-border:rgba(255,255,255,.07);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{height:100%}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--t1);min-height:100vh;-webkit-font-smoothing:antialiased;transition:background var(--t),color var(--t)}
+button{cursor:pointer;font-family:inherit}
+input,select{font-family:inherit}
+
+/* SHELL */
+.shell{display:flex;height:100vh;overflow:hidden}
+
+/* SIDEBAR */
+.sb{width:216px;background:var(--sb-bg);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto;border-right:1px solid var(--sb-border);transition:background var(--t), border-color var(--t)}
+.sb::-webkit-scrollbar{display:none}
+.sb-top{padding:22px 18px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--sb-border)}
+.sb-mark{width:32px;height:32px;border-radius:8px;background:#FFF;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;box-shadow:0 3px 10px rgba(0,0,0,.1); padding:2px; position:relative; overflow:hidden;}
+.sb-name{font-family:'Manrope',sans-serif;font-size:14px;font-weight:800;color:var(--sb-t1);letter-spacing:-.2px}
+.sb-sub{font-size:10px;color:var(--sb-t2);margin-top:1px;letter-spacing:.4px}
+.sb-nav{padding:12px 10px;flex:1}
+.sb-lbl{font-size:9.5px;font-weight:700;letter-spacing:1.3px;text-transform:uppercase;color:var(--sb-t2);opacity:0.8;padding:0 10px;margin:14px 0 4px}
+.sb-btn{display:flex;align-items:center;gap:9px;padding:8.5px 10px;border-radius:8px;color:var(--sb-t2);font-size:13px;font-weight:500;border:none;background:none;width:100%;text-align:left;margin-bottom:1px;transition:all .15s;white-space:nowrap}
+.sb-btn:hover{background:var(--sb-hov);color:var(--sb-t1)}
+.sb-btn.on{background:var(--sb-act);color:var(--sb-act-t);font-weight:600}
+.sb-btn.on .sb-pip{opacity:1}
+.sb-ico{font-size:14px;width:16px;text-align:center;flex-shrink:0}
+.sb-pip{margin-left:auto;width:5px;height:5px;border-radius:50%;background:var(--indigo);opacity:0;flex-shrink:0}
+.sb-foot{padding:14px;border-top:1px solid var(--sb-border)}
+.sb-sync{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--sb-t2)}
+.s-dot{width:5px;height:5px;border-radius:50%;background:var(--emerald);animation:pdot 2s infinite}
+@keyframes pdot{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* MAIN */
+.main{flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden}
+
+/* TOPBAR */
+.topbar{height:56px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 26px;gap:12px;flex-shrink:0;transition:background var(--t),border-color var(--t)}
+.tb-crumb{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--t2)}
+.tb-pg{font-family:'Manrope',sans-serif;font-size:15px;font-weight:700;color:var(--t1)}
+.tb-sep{color:var(--t3)}
+.tb-r{margin-left:auto;display:flex;align-items:center;gap:7px}
+.thm-sw{display:flex;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:3px;gap:2px}
+.thm-b{width:24px;height:24px;border-radius:5px;border:none;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;transition:all .15s;background:transparent;color:var(--t2)}
+.thm-b:hover{background:var(--surface)}
+.thm-b.on{background:var(--surface);box-shadow:0 1px 3px rgba(0,0,0,.12);color:var(--t1)}
+.tbtn{height:30px;padding:0 11px;border-radius:7px;border:1px solid var(--border);background:var(--surface2);color:var(--t2);font-size:12px;font-weight:500;transition:all .15s;display:flex;align-items:center;gap:5px;white-space:nowrap}
+.tbtn:hover{background:var(--surface);color:var(--t1)}
+.tbtn-p{background:var(--indigo);color:#fff;border-color:var(--indigo)}
+.tbtn-p:hover{background:#4F52D6;color:#fff;border-color:#4F52D6}
+.fy-tag{height:24px;padding:0 9px;background:var(--indigo-s);border:1px solid var(--indigo);border-radius:6px;font-size:10.5px;font-weight:700;color:var(--indigo);letter-spacing:.5px;display:flex;align-items:center}
+
+/* CONTENT */
+.cnt{flex:1;overflow-y:auto;overflow-x:hidden;padding:26px;display:flex;flex-direction:column}
+.pg{display:none;flex:1}
+.pg.on{display:block;animation:rise .26s ease}
+@keyframes rise{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+
+/* CARD */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px;box-shadow:var(--sh);transition:box-shadow .2s,background var(--t),border-color var(--t)}
+.card:hover{box-shadow:var(--sh-lg)}
+.card-flush{padding:0;overflow:hidden}
+
+/* GRIDS */
+.g5{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:18px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-bottom:18px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px}
+.g21{display:grid;grid-template-columns:2fr 1fr;gap:18px;margin-bottom:18px}
+@media(max-width:1280px){.g5{grid-template-columns:repeat(3,1fr)}.g21{grid-template-columns:1fr}}
+@media(max-width:960px){.g3,.g2{grid-template-columns:1fr}}
+@media(max-width:600px){.g5{grid-template-columns:1fr 1fr}}
+
+/* KPI */
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px;position:relative;overflow:hidden;box-shadow:var(--sh);transition:all .2s}
+.kpi:hover{transform:translateY(-2px);box-shadow:var(--sh-lg)}
+.kpi-bar{position:absolute;top:0;left:0;right:0;height:3px;border-radius:var(--r) var(--r) 0 0}
+.kpi-ico{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;margin-bottom:14px}
+.kpi-lbl{font-size:10.5px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:var(--t2);margin-bottom:5px}
+.kpi-num{font-family:'Manrope',sans-serif;font-size:28px;font-weight:800;color:var(--t1);line-height:1;margin-bottom:10px;letter-spacing:-1px}
+.kpi-foot{display:flex;align-items:center;justify-content:space-between}
+.kpi-meta{font-size:11px;color:var(--t3)}
+
+/* SECTION HEAD */
+.sh{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;gap:12px}
+.sh-t{font-family:'Manrope',sans-serif;font-size:13.5px;font-weight:700;color:var(--t1)}
+.sh-s{font-size:11px;color:var(--t2);margin-top:2px}
+.sh-r{display:flex;align-items:center;gap:7px;flex-shrink:0}
+
+/* BADGE */
+.b{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:5px;font-size:10.5px;font-weight:700}
+.bg{background:var(--emerald-s);color:var(--emerald)}
+.ba{background:var(--amber-s);color:var(--amber)}
+.br{background:var(--rose-s);color:var(--rose)}
+.bi{background:var(--indigo-s);color:var(--indigo)}
+.bs{background:var(--sky-s);color:var(--sky)}
+.bv{background:var(--violet-s);color:var(--violet)}
+
+/* ALERT */
+.alert{display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:11px;margin-bottom:20px;font-size:12.5px;font-weight:500; transition: all 0.3s ease;}
+.alert-ok{background:var(--emerald-s);border:1px solid var(--emerald);color:var(--emerald)}
+.alert-warn{background:var(--rose-s);border:1px solid var(--rose);color:var(--rose)}
+
+/* PROGRESS */
+.prg{height:5px;background:var(--surface2);border-radius:99px;overflow:hidden}
+.prf{height:100%;border-radius:99px;transition:width 1.1s cubic-bezier(.4,0,.2,1)}
+.pfg{background:linear-gradient(90deg,var(--emerald),#34D399)}
+.pfa{background:linear-gradient(90deg,var(--amber),#FCD34D)}
+.pfr{background:linear-gradient(90deg,var(--rose),#FB7185)}
+.pfi{background:linear-gradient(90deg,var(--indigo),var(--violet))}
+
+/* CHART */
+.ch{position:relative}
+.ch-sm{height:150px}.ch-md{height:220px}.ch-lg{height:280px}
+
+/* TABLE */
+.tw{overflow-x:auto;border-radius:10px}
+.tw::-webkit-scrollbar{height:4px}
+.tw::-webkit-scrollbar-thumb{background:var(--indigo);border-radius:2px}
+.ti{max-height:340px;overflow-y:auto}
+.ti::-webkit-scrollbar{width:4px}
+.ti::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead th{background:var(--surface2);color:var(--t2);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;padding:9px 13px;text-align:left;white-space:nowrap;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:2;transition:background var(--t)}
+tbody td{padding:9px 13px;border-bottom:1px solid var(--border);color:var(--t1);vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:var(--surface2)}
+.rh td{background:var(--indigo-s)!important;color:var(--indigo);font-size:9.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase}
+
+/* METRIC ROW */
+.mr{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.mr:last-child{border:none;padding-bottom:0}
+.mr-ico{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.mr-inf{flex:1;min-width:0}
+.mr-n{font-size:12px;font-weight:500;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mr-s{font-size:10.5px;color:var(--t3);margin-top:1px}
+.mr-v{font-family:'Manrope',sans-serif;font-size:19px;font-weight:800;flex-shrink:0}
+
+/* LAG KPI ROW */
+.lag-row{display:grid;grid-template-columns:repeat(7,1fr);gap:11px;margin-bottom:18px}
+@media(max-width:1300px){.lag-row{grid-template-columns:repeat(4,1fr)}}
+.lkpi{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:15px;text-align:center;transition:all .2s;box-shadow:var(--sh)}
+.lkpi:hover{transform:translateY(-2px);box-shadow:var(--sh-lg)}
+.lkpi-em{font-size:20px;margin-bottom:7px}
+.lkpi-v{font-family:'Manrope',sans-serif;font-size:24px;font-weight:800;line-height:1;margin-bottom:4px}
+.lkpi-n{font-size:10px;color:var(--t2);line-height:1.3;font-weight:500}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 13px;border-radius:8px;border:1px solid var(--border);font-size:12px;font-weight:600;background:var(--surface);color:var(--t2);transition:all .15s}
+.btn:hover{background:var(--surface2);color:var(--t1)}
+.btn-p{background:var(--indigo);color:#fff;border-color:var(--indigo)}
+.btn-p:hover{background:#4F52D6;border-color:#4F52D6;color:#fff}
+.btn-r{background:var(--rose-s);color:var(--rose);border-color:var(--rose)}
+
+/* FORMS */
+.fgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media(max-width:900px){.fgrid{grid-template-columns:repeat(2,1fr)}}
+.fg{display:flex;flex-direction:column;gap:5px}
+.fl{font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--t2)}
+.fi{background:var(--surface2);border:1.5px solid var(--border);color:var(--t1);padding:8px 11px;border-radius:8px;font-size:13px;transition:all .15s}
+.fi:focus{outline:none;border-color:var(--indigo);background:var(--surface)}
+.fi::placeholder{color:var(--t3)}
+select.fi option{background:var(--surface)}
+
+/* TABS */
+.tabs{display:flex;gap:2px;background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:3px;width:fit-content;margin-bottom:18px}
+.tab{padding:6px 14px;border-radius:7px;border:none;background:transparent;color:var(--t2);font-size:12px;font-weight:600;transition:all .15s}
+.tab.on{background:var(--surface);color:var(--t1);box-shadow:0 1px 4px rgba(0,0,0,.08)}
+
+/* FBAR */
+.fbar{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-bottom:18px}
+
+/* HEAT */
+.hc{display:inline-flex;align-items:center;justify-content:center;width:26px;height:22px;border-radius:5px;font-size:10px;font-weight:700}
+.hcz{background:var(--emerald-s);color:var(--emerald)}
+.hc1{background:var(--amber-s);color:var(--amber)}
+.hc2{background:var(--rose-s);color:var(--rose)}
+.hcn{background:var(--surface2);color:var(--t3)}
+
+/* GAUGE */
+.gw{display:flex;flex-direction:column;align-items:center}
+.gn{font-family:'Manrope',sans-serif;font-size:34px;font-weight:800;color:var(--t1);margin-top:-20px;letter-spacing:-2px}
+.gl{font-size:11px;color:var(--t2);margin-top:3px}
+
+/* COMPARE */
+.cmp-h{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border)}
+.cmp-m{font-family:'Manrope',sans-serif;font-size:13px;font-weight:700;color:var(--t1)}
+.cmp-r{display:flex;align-items:center;padding:8px 18px;border-bottom:1px solid var(--border);gap:10px}
+.cmp-r:last-child{border:none}
+.cmp-n{flex:1;font-size:11.5px;color:var(--t2)}
+.cmp-v{font-family:'Manrope',sans-serif;font-size:14px;font-weight:700;color:var(--t1)}
+
+/* UTILS */
+.mb0{margin-bottom:0}.mb8{margin-bottom:8px}.mb16{margin-bottom:16px}.mb18{margin-bottom:18px}
+.mt8{margin-top:8px}.mt16{margin-top:16px}
+.flex{display:flex}.aic{align-items:center}.jsb{justify-content:space-between}
+.gap8{gap:8px}
+.mono{font-family:'SF Mono','Roboto Mono',monospace}
+.c2{color:var(--t2)}.c3{color:var(--t3)}.fw7{font-weight:700}
+.fs10{font-size:10px}.fs11{font-size:11px}.fs12{font-size:12px}
+
+/* TOAST */
+.tstack{position:fixed;bottom:18px;right:18px;z-index:999;display:flex;flex-direction:column;gap:7px}
+.toast{background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:11px 15px;font-size:12px;font-weight:500;min-width:230px;box-shadow:var(--sh-lg);display:flex;align-items:center;gap:9px;color:var(--t1);animation:tin .3s ease}
+@keyframes tin{from{transform:translateX(110%);opacity:0}to{transform:translateX(0);opacity:1}}
+.tok{border-left:3px solid var(--emerald)}.ter{border-left:3px solid var(--rose)}.tinfo{border-left:3px solid var(--indigo)}
+
+/* FOOTER */
+.dev-footer {
+    margin-top: auto;
+    text-align: center;
+    font-size: 11.5px;
+    color: var(--t3);
+    padding: 24px 20px;
+    border-top: 1px solid var(--border);
+    letter-spacing: 0.3px;
+}
+.dev-footer a {
+    color: var(--indigo);
+    text-decoration: none;
+    font-weight: 500;
+}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<aside class="sb">
+  <div class="sb-top">
+    <div class="sb-mark">
+      <img src="https://lh3.googleusercontent.com/d/1AyVNnRebS0vJv2HHh2m0vRfQqKnpXw6g" alt="Logo" style="width:100%; height:100%; object-fit:contain; border-radius:6px;" onerror="this.style.display='none'; document.getElementById('fb-icon').style.display='block';">
+      <span id="fb-icon" style="display:none; font-size:18px;">⛑️</span>
+    </div>
+    <div><div class="sb-name">Dhanuka Kavach</div><div class="sb-sub">Scoreboard</div></div>
+  </div>
+  <nav class="sb-nav">
+    <div class="sb-lbl">Dashboards</div>
+    <button class="sb-btn on" onclick="nav('exec',this)"><span class="sb-ico">▪</span>Executive<span class="sb-pip"></span></button>
+    <button class="sb-btn" onclick="nav('lag',this)"><span class="sb-ico">▲</span>Lag Indicators<span class="sb-pip"></span></button>
+    <button class="sb-btn" onclick="nav('lead',this)"><span class="sb-ico">◆</span>Lead Indicators<span class="sb-pip"></span></button>
+    <div class="sb-lbl">Analysis</div>
+    <button class="sb-btn" onclick="nav('cmp',this)"><span class="sb-ico">↔</span>Comparison<span class="sb-pip"></span></button>
+    <button class="sb-btn" onclick="nav('fcast',this)"><span class="sb-ico">〜</span>Forecast<span class="sb-pip"></span></button>
+    <div class="sb-lbl">Manage</div>
+    <button class="sb-btn" onclick="nav('entry',this)"><span class="sb-ico">✎</span>Data Entry<span class="sb-pip"></span></button>
+    <button class="sb-btn" onclick="nav('cfg',this)"><span class="sb-ico">⊙</span>Settings<span class="sb-pip"></span></button>
+  </nav>
+  <div class="sb-foot"><div class="sb-sync"><div class="s-dot"></div><span id="syncLbl">Data Connected</span></div></div>
+</aside>
+
+<div class="main">
+  <header class="topbar">
+    <div class="tb-crumb">
+      <span class="c2 fs12">Dhanuka Kavach</span><span class="tb-sep">/</span>
+      <span class="tb-pg" id="pgT">Executive Overview</span>
+    </div>
+    <div class="tb-r">
+      <div class="thm-sw">
+        <button class="thm-b on" onclick="setTheme('light',this)" title="Light">☀</button>
+        <button class="thm-b" onclick="setTheme('ocean',this)" title="Ocean">🌊</button>
+        <button class="thm-b" onclick="setTheme('dark',this)" title="Dark">🌙</button>
+      </div>
+      <div class="fy-tag" id="fyTag">FY Year</div>
+      <button class="tbtn" onclick="dlPDF()">📄 Download PDF</button>
+      <button class="tbtn" onclick="dlXLSX()">📥 Export Excel</button>
+      <button class="tbtn tbtn-p" onclick="document.getElementById('xlIn').click()" style="padding: 0 16px; transform: scale(1.05); box-shadow: 0 4px 12px rgba(99,102,241,0.3);">📂 Upload Excel</button>
+      <input type="file" id="xlIn" accept=".xlsx,.xls" style="display:none" onchange="handleXL(event)">
+    </div>
+  </header>
+
+  <div class="cnt" id="pdfArea" style="background: var(--bg);">
+
+    <div class="pg on" id="p-exec">
+      <div id="topAlert" class="alert alert-ok">✅ &nbsp;<strong>Awaiting Data...</strong></div>
+      
+      <div class="g5">
+        <div class="kpi"><div class="kpi-bar" style="background:linear-gradient(90deg,var(--amber),var(--rose))"></div><div class="kpi-ico" style="background:var(--amber-s)">🩹</div><div class="kpi-lbl">First Aid YTD</div><div class="kpi-num" style="color:var(--amber)" id="kn1">0</div><div class="kpi-foot"><span class="b ba">YTD</span></div></div>
+        <div class="kpi"><div class="kpi-bar" style="background:linear-gradient(90deg,var(--emerald),#34D399)"></div><div class="kpi-ico" style="background:var(--emerald-s)">🏥</div><div class="kpi-lbl">Recordable Cases</div><div class="kpi-num" style="color:var(--emerald)" id="kn2">0</div><div class="kpi-foot"><span class="b bg" id="kn2_b">✓ Zero</span></div></div>
+        <div class="kpi"><div class="kpi-bar" style="background:linear-gradient(90deg,var(--sky),var(--indigo))"></div><div class="kpi-ico" style="background:var(--sky-s)">⏱</div><div class="kpi-lbl">Manhours K</div><div class="kpi-num" style="font-size:22px" id="kn3">0</div><div class="kpi-foot"><span class="b bs">Total YTD</span></div></div>
+        <div class="kpi"><div class="kpi-bar" style="background:linear-gradient(90deg,var(--indigo),var(--violet))"></div><div class="kpi-ico" style="background:var(--indigo-s)">📉</div><div class="kpi-lbl">TFAIR</div><div class="kpi-num" style="color:var(--indigo)" id="kn4">0.00</div><div class="kpi-foot"><span class="b bg" id="tfairTgt">Target: 0.86</span></div></div>
+        <div class="kpi"><div class="kpi-bar" style="background:linear-gradient(90deg,var(--emerald),#6EE7B7)"></div><div class="kpi-ico" style="background:var(--emerald-s)">🛡</div><div class="kpi-lbl">TRIR</div><div class="kpi-num" style="color:var(--emerald)" id="kn5">0.00</div><div class="kpi-foot"><span class="b bg">Target: 0</span></div></div>
+      </div>
+      <div class="g21">
+        <div class="card"><div class="sh"><div><div class="sh-t">Manhours & First Aid — Monthly</div><div class="sh-s" id="monthRangeLbl">Apr - Mar</div></div></div><div class="ch ch-lg"><canvas id="cET"></canvas></div></div>
+        <div class="card"><div class="sh"><div class="sh-t">Lag Incidents YTD</div></div><div id="lagMR"></div></div>
+      </div>
+      <div class="g3">
+        <div class="card"><div class="sh"><div class="sh-t">Performance Radar</div></div><div class="ch" style="height:200px"><canvas id="cER"></canvas></div></div>
+        <div class="card"><div class="sh"><div class="sh-t">Compliance Progress</div></div><div id="cmpList"></div></div>
+        <div class="card"><div class="sh"><div class="sh-t">Incident Heatmap</div></div><div id="heatEl"></div><div class="div"></div><div class="sh mb0"><div class="sh-t" style="font-size:12px">Near Miss Trend</div></div><div class="ch ch-sm" style="margin-top:7px"><canvas id="cNMm"></canvas></div></div>
+      </div>
+      <div class="g2">
+        <div class="card"><div class="sh"><div><div class="sh-t">TFAIR Monthly</div><div class="sh-s" id="tfairSub">vs Target 0.86</div></div></div><div class="ch ch-md"><canvas id="cTF"></canvas></div></div>
+        <div class="card"><div class="sh"><div><div class="sh-t">Safety Training Manhours</div><div class="sh-s" id="trainTitle">YTD hrs — Target</div></div></div><div class="ch ch-md"><canvas id="cTR"></canvas></div></div>
+      </div>
+      <div class="card card-flush">
+        <div class="sh" style="padding:18px 20px 14px;margin-bottom:0;border-bottom:1px solid var(--border)">
+          <div class="sh-t">Lead & Culture Indicators — Target vs Achieved</div>
+        </div>
+        <div class="tw ti"><table><thead><tr><th>#</th><th>Indicator</th><th>Target</th><th>YTD</th><th>Ach %</th><th>Status</th><th>Progress</th></tr></thead><tbody id="lTbl"></tbody></table></div>
+      </div>
+    </div>
+
+    <div class="pg" id="p-lag">
+      <div class="lag-row" id="lagRow"></div>
+      <div class="g2">
+        <div class="card"><div class="sh"><div class="sh-t">Monthly Lag Incidents</div></div><div class="ch ch-lg"><canvas id="cLB"></canvas></div></div>
+        <div class="card"><div class="sh"><div class="sh-t">Incident Type Breakdown</div></div><div class="ch ch-lg"><canvas id="cLD"></canvas></div></div>
+      </div>
+      <div class="card card-flush mb18">
+        <div class="sh" style="padding:18px 20px 14px;margin-bottom:0;border-bottom:1px solid var(--border)"><div class="sh-t">Monthly Detail</div></div>
+        <div class="tw"><table><thead id="lTH"></thead><tbody id="lTB"></tbody></table></div>
+      </div>
+      <div class="card"><div class="sh"><div class="sh-t">Incident Rate Trend — TFAIR</div></div><div class="ch ch-lg"><canvas id="cLR"></canvas></div></div>
+    </div>
+
+    <div class="pg" id="p-lead">
+      <div class="g3">
+        <div class="card" style="display:flex;flex-direction:column;align-items:center;justify-content:center">
+          <div class="sh" style="width:100%"><div class="sh-t">Overall Compliance</div></div>
+          <div class="gw"><canvas id="cGG" width="220" height="130"></canvas><div class="gn" id="gnVal">0.0%</div><div class="gl">YTD Lead Compliance Score</div></div>
+        </div>
+        <div class="card" style="grid-column:span 2"><div class="sh"><div class="sh-t">Lead Indicators Radar</div></div><div class="ch" style="height:240px"><canvas id="cLRad"></canvas></div></div>
+      </div>
+      <div class="g2">
+        <div class="card"><div class="sh"><div class="sh-t">Near Miss Reporting</div><span class="b bs" id="nmTot">YTD: 0</span></div><div class="ch ch-md"><canvas id="cLNM"></canvas></div></div>
+        <div class="card"><div class="sh"><div class="sh-t">Unsafe Acts Identified</div><span class="b bg" id="uaTot">0 vs Target</span></div><div class="ch ch-md"><canvas id="cUA"></canvas></div></div>
+      </div>
+      <div class="card card-flush mb18">
+        <div class="sh" style="padding:18px 20px 14px;margin-bottom:0;border-bottom:1px solid var(--border)"><div class="sh-t">Lead Indicators Monthly Detail</div></div>
+        <div class="tw ti"><table><thead id="ldH"></thead><tbody id="ldB"></tbody></table></div>
+      </div>
+      <div class="g2">
+        <div class="card"><div class="sh"><div class="sh-t">OH&S Culture Performance</div></div><div id="cultEl"></div></div>
+        <div class="card"><div class="sh"><div class="sh-t">Drills & Safety Committee</div></div><div class="ch ch-md"><canvas id="cDr"></canvas></div></div>
+      </div>
+    </div>
+
+    <div class="pg" id="p-cmp">
+      <div class="fbar">
+        <select class="fi" id="cm1" onchange="rCmp()"><option value="10" selected>February</option><option value="9">January</option><option value="8">December</option><option value="7">November</option><option value="6">October</option><option value="5">September</option><option value="4">August</option><option value="3">July</option><option value="2">June</option><option value="1">May</option><option value="0">April</option></select>
+        <span class="c2 fw7">vs</span>
+        <select class="fi" id="cm2" onchange="rCmp()"><option value="9" selected>January</option><option value="10">February</option><option value="8">December</option><option value="7">November</option><option value="6">October</option><option value="5">September</option><option value="4">August</option><option value="3">July</option><option value="2">June</option><option value="1">May</option><option value="0">April</option></select>
+        <button class="btn btn-p" onclick="rCmp()">Compare</button>
+      </div>
+      <div class="g2 mb18" id="cmpCards"></div>
+      <div class="card mb18"><div class="sh"><div class="sh-t">Month-on-Month Comparison</div></div><div class="ch ch-lg"><canvas id="cCB"></canvas></div></div>
+      <div class="g2">
+        <div class="card"><div class="sh"><div class="sh-t">Quarterly Breakdown</div></div><div class="ch ch-lg"><canvas id="cQtr"></canvas></div></div>
+        <div class="card"><div class="sh"><div class="sh-t">Previous FY vs Current YTD</div></div><div class="ch ch-lg"><canvas id="cFYC"></canvas></div></div>
+      </div>
+    </div>
+
+    <div class="pg" id="p-fcast">
+      <div class="alert" style="background:var(--violet-s);border:1px solid var(--violet);color:var(--violet)">🔮 &nbsp;Linear regression forecast based on YTD trend. Dashed lines = projections.</div>
+      <div class="g2">
+        <div class="card"><div class="sh"><div class="sh-t">TFAIR Forecast</div></div><div class="ch ch-lg"><canvas id="cFTF"></canvas></div></div>
+        <div class="card"><div class="sh"><div class="sh-t">Near Miss Forecast</div></div><div class="ch ch-lg"><canvas id="cFNM"></canvas></div></div>
+      </div>
+      <div class="g3">
+        <div class="card"><div class="sh"><div class="sh-t">Training Hours</div></div><div class="ch ch-md"><canvas id="cFTR"></canvas></div></div>
+        <div class="card"><div class="sh"><div class="sh-t">Unsafe Acts</div></div><div class="ch ch-md"><canvas id="cFUA"></canvas></div></div>
+        <div class="card"><div class="sh"><div class="sh-t">Manhours (K)</div></div><div class="ch ch-md"><canvas id="cFMH"></canvas></div></div>
+      </div>
+    </div>
+
+    <div class="pg" id="p-entry">
+      <div class="tabs"><button class="tab on" onclick="etab('mo',this)">Monthly Entry</button><button class="tab" onclick="etab('gr',this)">Edit Grid</button><button class="tab" onclick="etab('rc',this)">All Records</button></div>
+      <div id="et-mo">
+        <div class="card"><div class="sh"><div><div class="sh-t">Add Monthly Record</div><div class="sh-s">Select month and enter values</div></div><select class="fi" id="eM"><option value="0">April</option><option value="1">May</option><option value="2">June</option><option value="3">July</option><option value="4">August</option><option value="5">September</option><option value="6">October</option><option value="7">November</option><option value="8">December</option><option value="9">January</option><option value="10">February</option><option value="11">March</option></select></div>
+        <div class="fgrid" id="eFields"></div>
+        <div class="flex gap8 mt8"><button class="btn btn-p" onclick="saveMo()">💾 Save</button><button class="btn" onclick="clearE()">Clear</button></div></div>
+      </div>
+      <div id="et-gr" style="display:none"><div class="card card-flush"><div class="sh" style="padding:18px 20px 14px;margin-bottom:0;border-bottom:1px solid var(--border)"><div class="sh-t">Inline Edit Grid</div><button class="btn btn-p" onclick="saveData()">💾 Save All</button></div><div class="tw"><table><thead id="egH"></thead><tbody id="egB"></tbody></table></div></div></div>
+      <div id="et-rc" style="display:none"><div class="card card-flush"><div class="sh" style="padding:18px 20px 14px;margin-bottom:0;border-bottom:1px solid var(--border)"><div class="sh-t">All Records</div><div class="flex gap8"><button class="btn btn-r" onclick="clearAll()">🗑 Reset All Data</button></div></div><div class="tw ti"><table><thead id="rrH"></thead><tbody id="rrB"></tbody></table></div></div></div>
+    </div>
+
+    <div class="pg" id="p-cfg">
+      <div class="g2">
+        <div class="card">
+          <div class="sh"><div class="sh-t">Theme Selection</div></div>
+          <div class="flex gap8" style="flex-wrap:wrap">
+            <button onclick="setTheme('light')" class="btn" style="flex:1;flex-direction:column;height:60px;gap:3px">☀<br><span class="fs11">Light</span></button>
+            <button onclick="setTheme('ocean')" class="btn" style="flex:1;flex-direction:column;height:60px;gap:3px">🌊<br><span class="fs11">Ocean</span></button>
+            <button onclick="setTheme('dark')" class="btn" style="flex:1;flex-direction:column;height:60px;gap:3px">🌙<br><span class="fs11">Dark</span></button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="sh"><div class="sh-t">Data Actions</div></div>
+          <div class="flex" style="flex-direction:column;gap:7px">
+            <button class="btn btn-r" onclick="clearAll()">🗑 Factory Reset Application (Clear Data)</button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="dev-footer">
+        Developed by Bhanu Pratap Singh • <a href="mailto:bhanupratap@dhanuka.com">bhanupratap@dhanuka.com</a>
+      </div>
+      
+    </div>
+
+  </div></div></div><div class="tstack" id="ts"></div>
+
+<script>
+// ── DATA ──────────────────────────────────────
+const MO=["Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec","Jan","Feb","Mar"];
+const MOF=["April","May","June","July","August","September","October","November","December","January","February","March"];
+
+// Default Baseline (COMPLETELY BLANK FOR FRESH START)
+const defaultD = {
+  primary:{
+    fy: 'FY T-2025-26', // Will be overwritten by Excel D1
+    manhours:Array(12).fill(null), 
+    recordable:Array(12).fill(null)
+  },
+  lag:[
+    {name:"First Aid Case",prev:0,monthly:Array(12).fill(null)},
+    {name:"LTI (Lost Time Injury)",prev:0,monthly:Array(12).fill(null)},
+    {name:"RWC",prev:0,monthly:Array(12).fill(null)},
+    {name:"MTI",prev:0,monthly:Array(12).fill(null)},
+    {name:"Fatal",prev:0,monthly:Array(12).fill(null)},
+    {name:"Fire & Spark",prev:0,monthly:Array(12).fill(null)},
+    {name:"Dangerous Occurrence",prev:0,monthly:Array(12).fill(null)}
+  ],
+  lead:[
+    {name:"Near Miss",prev:0,target:0,monthly:Array(12).fill(null)},
+    {name:"Investigation Closure",prev:0,target:0,monthly:Array(12).fill(null)},
+    {name:"Unsafe Acts Identified",prev:0,target:0,monthly:Array(12).fill(null)},
+    {name:"Safety Rounds by Leadership",prev:0,target:0,monthly:Array(12).fill(null)},
+    {name:"Corporate Safety Observations",prev:0,target:0,monthly:Array(12).fill(null)},
+    {name:"Corp Obs Closure %",prev:0,target:0,monthly:Array(12).fill(null)},
+    {name:"Action Plan Closure",prev:0,target:0,monthly:Array(12).fill(null)},
+    {name:"PTW Height/Hot %",prev:0,target:0,monthly:Array(12).fill(null)},
+    {name:"PTW General %",prev:0,target:0,monthly:Array(12).fill(null)},
+    {name:"Third Party Audit %",prev:0,target:0,monthly:Array(12).fill(null)},
+    {name:"Safety Training Manhours",prev:0,target:0,monthly:Array(12).fill(null)},
+    {name:"MMI-360 Machine Guarding",prev:0,target:0,monthly:Array(12).fill(null)},
+    {name:"BBS Observation Forms",prev:0,target:0,monthly:Array(12).fill(null)}
+  ],
+  culture:[
+    {name:"Mock Drills Conducted",prev:0,target:0,monthly:Array(12).fill(null)},
+    {name:"Fire Drills Conducted",prev:0,target:0,monthly:Array(12).fill(null)},
+    {name:"Mock Drill Obs Closure %",prev:0,target:0,monthly:Array(12).fill(null)},
+    {name:"Safety Committee Conducted",prev:0,target:0,monthly:Array(12).fill(null)},
+    {name:"Committee MOM Closure %",prev:0,target:0,monthly:Array(12).fill(null)},
+    {name:"Safety Obs Closure %",prev:0,target:0,monthly:Array(12).fill(null)},
+    {name:"Rewards / Recognition",prev:0,target:0,monthly:Array(12).fill(null)},
+    {name:"Progressive Disciplinary",prev:0,target:0,monthly:Array(12).fill(null)}
+  ]
+};
+
+let D = JSON.parse(JSON.stringify(defaultD)); 
+try{
+    const s=localStorage.getItem('siq_v10'); // Reset storage key
+    if(s) D=JSON.parse(s);
+}catch(e){}
+
+const $ = id => document.getElementById(id);
+const S = a => a.filter(v=>v!==null&&v!==undefined).reduce((a,b)=>a+b,0);
+const AVG= a => {const f=a.filter(v=>v!==null);return f.length?f.reduce((a,b)=>a+b,0)/f.length:0;};
+
+function saveData(silent){
+    try{localStorage.setItem('siq_v10',JSON.stringify(D)); if(!silent) toast('💾 Saved to Local Storage!','ok');}catch(e){}
+}
+
+// ── NEW "SMART" EXCEL UPLOADER ─────────────────
+function handleXL(e){
+    const file=e.target.files[0];
+    if(!file)return;
+    
+    // CACHE THE RAW BINARY FILE to preserve formatting and formulas for export
+    const rawReader = new FileReader();
+    rawReader.onload = function(re) {
+        const bytes = new Uint8Array(re.target.result);
+        let binary = '';
+        for (let i = 0; i < bytes.byteLength; i++) {
+            binary += String.fromCharCode(bytes[i]);
+        }
+        localStorage.setItem('siq_raw_excel', window.btoa(binary));
+    };
+    rawReader.readAsArrayBuffer(file);
+    
+    // Parse data to power the dashboard
+    const r=new FileReader();
+    r.onload=function(ev){
+        try{
+            const wb=XLSX.read(ev.target.result,{type:'array'});
+            const ws=wb.Sheets[wb.SheetNames[0]];
+            const json=XLSX.utils.sheet_to_json(ws,{header:1});
+            
+            const headerRow = json[0] || [];
+            if(headerRow[3]) {
+                D.primary.fy = String(headerRow[3]).trim();
+            }
+
+            let mCols = [];
+            for(let rowIdx=0; rowIdx<Math.min(10, json.length); rowIdx++){
+                let row = json[rowIdx];
+                if(!row) continue;
+                let foundApr = row.findIndex(c => {
+                    const str = String(c).toLowerCase().trim();
+                    return str.startsWith('apr') || str.includes('04-01');
+                });
+                if(foundApr !== -1 && row.length >= foundApr + 11) {
+                    mCols = [0,1,2,3,4,5,6,7,8,9,10,11].map(i => foundApr + i);
+                    break;
+                }
+            }
+            
+            if(mCols.length === 0) mCols = [4,5,6,7,8,9,10,11,12,13,14,15]; 
+
+            let matchedRows = 0;
+            
+            json.forEach((row, ri)=>{
+                if(ri===0) return; 
+                
+                const rowTextRaw = String(row[1] || '').toLowerCase() + ' ' + String(row[0] || '').toLowerCase();
+                const rowText = rowTextRaw.replace(/[^a-z0-9]/g, ''); 
+                
+                if(!rowText || rowText.length < 3) return;
+                
+                const mv = mCols.map(c => {
+                    const parsed = parseFloat(row[c]);
+                    return isNaN(parsed) ? null : parsed;
+                });
+                
+                const has = (str) => rowText.includes(str.replace(/[^a-z0-9]/g, ''));
+                let updated = false;
+
+                const apply = (targetArr, indObj) => {
+                    mv.forEach((v,i) => { if(v!==null) targetArr[i]=v; });
+                    if(indObj) {
+                        const prevStr = String(row[2] || '').trim();
+                        const targetStr = String(row[3] || '').trim();
+                        if (prevStr && prevStr !== '-' && !isNaN(parseFloat(prevStr))) indObj.prev = parseFloat(prevStr);
+                        if (targetStr && targetStr !== '-' && !isNaN(parseFloat(targetStr))) indObj.target = parseFloat(targetStr);
+                        else if (targetStr && targetStr !== '-') indObj.target = targetStr;
+                    }
+                    updated = true;
+                };
+
+                // MATCHING LOGIC
+                if ((has('manhour') || has('man hour')) && !has('train')) { apply(D.primary.manhours); }
+                else if ((has('recordable') && has('case')) || has('total recordable')) { apply(D.primary.recordable); }
+
+                else if (has('first aid') || has('fac') || has('tfair')) { 
+                    if (!has('rate') && !has('tfair')) apply(D.lag[0].monthly, D.lag[0]); 
+                    else if (has('rate') || has('tfair')) {
+                        const tgt = String(row[3] || '').trim();
+                        if (tgt && tgt !== '-' && !isNaN(parseFloat(tgt))) D.lag[0].target = parseFloat(tgt);
+                    }
+                }
+                else if (has('lti') || has('lost time')) { apply(D.lag[1].monthly, D.lag[1]); }
+                else if (has('rwc') || has('restricted work')) { apply(D.lag[2].monthly, D.lag[2]); }
+                else if (has('mti') || has('medical treat')) { apply(D.lag[3].monthly, D.lag[3]); }
+                else if (has('fatal')) { apply(D.lag[4].monthly, D.lag[4]); }
+                else if ((has('fire') && !has('drill')) || has('spark')) { apply(D.lag[5].monthly, D.lag[5]); }
+                else if (has('dangerous occur')) { apply(D.lag[6].monthly, D.lag[6]); }
+
+                else if (has('near miss')) { apply(D.lead[0].monthly, D.lead[0]); }
+                else if (has('investigation clos')) { apply(D.lead[1].monthly, D.lead[1]); }
+                else if (has('unsafe act')) { apply(D.lead[2].monthly, D.lead[2]); }
+                else if (has('safety round') || has('leadership')) { apply(D.lead[3].monthly, D.lead[3]); }
+                else if (has('corporate safety') || (has('corp obs') && !has('clos'))) { apply(D.lead[4].monthly, D.lead[4]); }
+                else if (has('corp obs clos')) { apply(D.lead[5].monthly, D.lead[5]); }
+                else if (has('action plan clos')) { apply(D.lead[6].monthly, D.lead[6]); }
+                else if (has('ptw height') || has('ptw hot')) { apply(D.lead[7].monthly, D.lead[7]); }
+                else if (has('ptw general')) { apply(D.lead[8].monthly, D.lead[8]); }
+                else if (has('third party audit')) { apply(D.lead[9].monthly, D.lead[9]); }
+                else if (has('training manhour') || has('safety training')) { apply(D.lead[10].monthly, D.lead[10]); }
+                else if (has('machine guard') || has('mmi')) { apply(D.lead[11].monthly, D.lead[11]); }
+                else if (has('bbs') || has('behavior')) { apply(D.lead[12].monthly, D.lead[12]); }
+
+                else if (has('mock drill') && !has('clos')) { apply(D.culture[0].monthly, D.culture[0]); }
+                else if (has('fire drill')) { apply(D.culture[1].monthly, D.culture[1]); }
+                else if (has('mock drill') && has('clos')) { apply(D.culture[2].monthly, D.culture[2]); }
+                else if (has('safety committee') && !has('clos')) { apply(D.culture[3].monthly, D.culture[3]); }
+                else if (has('committee') && has('clos')) { apply(D.culture[4].monthly, D.culture[4]); }
+                else if (has('safety obs') && has('clos')) { apply(D.culture[5].monthly, D.culture[5]); }
+                else if (has('reward') || has('recognition')) { apply(D.culture[6].monthly, D.culture[6]); }
+                else if (has('disciplin')) { apply(D.culture[7].monthly, D.culture[7]); }
+
+                if(updated) matchedRows++;
+            });
+            
+            if (matchedRows > 0) {
+                saveData(true);
+                toast(`✅ Success! Synced ${matchedRows} metrics from your Excel file.`,'ok');
+                renderActive();
+            } else {
+                toast('⚠️ Check format: Could not match data columns or row names.','warn');
+            }
+            
+        }catch(err){
+            console.error(err);
+            toast('❌ Error processing Excel file.','err');
+        }
+    };
+    r.readAsArrayBuffer(file);
+    e.target.value=''; 
+}
+
+// ── EXACT EXCEL EXPORT (USING EXCELJS) ─────────
+async function dlXLSX() {
+    const b64 = localStorage.getItem('siq_raw_excel');
+    if(!b64) {
+        toast('⚠️ No original template found. Please upload your scorecard first so we can preserve its formatting.', 'err');
+        return;
+    }
+    
+    toast('⏳ Generating 100% exact Excel export...', 'info');
+    
+    try {
+        const binaryString = window.atob(b64);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
+        }
+        
+        const workbook = new ExcelJS.Workbook();
+        await workbook.xlsx.load(bytes.buffer);
+        const ws = workbook.worksheets[0];
+        
+        // Find month columns (ExcelJS is 1-indexed)
+        let mCols = [];
+        ws.eachRow((row, rowNum) => {
+            if (mCols.length > 0) return;
+            row.eachCell((cell, colNum) => {
+                const val = String(cell.value || '').toLowerCase().trim();
+                if(val.startsWith('apr') || val.includes('04-01') || (cell.type === ExcelJS.ValueType.Date && cell.value.getMonth() === 3)) {
+                    mCols = [0,1,2,3,4,5,6,7,8,9,10,11].map(i => colNum + i);
+                }
+            });
+        });
+        if(mCols.length === 0) mCols = [5,6,7,8,9,10,11,12,13,14,15,16]; 
+        
+        // Map data back to cells
+        ws.eachRow((row, rowNum) => {
+            if(rowNum === 1) return; // Skip header
+            
+            const c1 = String(row.getCell(1).value || '');
+            const c2 = String(row.getCell(2).value || '');
+            const rowTextRaw = (c1 + ' ' + c2).toLowerCase();
+            const rowText = rowTextRaw.replace(/[^a-z0-9]/g, '');
+            
+            if(!rowText || rowText.length < 3) return;
+            const has = (str) => rowText.includes(str.replace(/[^a-z0-9]/g, ''));
+            
+            // Injects values but IGNORES cells that have existing formulas!
+            const inject = (sourceArr) => {
+                mCols.forEach((colIdx, i) => {
+                    const cell = row.getCell(colIdx);
+                    if(cell.formula) return; // 🔴 NEVER OVERWRITE FORMULAS
+                    
+                    if(sourceArr[i] !== null && sourceArr[i] !== undefined) {
+                        cell.value = sourceArr[i];
+                    } else if(cell.value !== null) {
+                        cell.value = null; // Clear if emptied in app
+                    }
+                });
+            };
+
+            // Mapping Logic for Injection
+            if ((has('manhour') || has('man hour')) && !has('train')) { inject(D.primary.manhours); }
+            else if ((has('recordable') && has('case')) || has('total recordable')) { inject(D.primary.recordable); }
+
+            else if (has('first aid') || has('fac') || has('tfair')) { 
+                if (!has('rate') && !has('tfair')) inject(D.lag[0].monthly); 
+                // Do not inject rate formulas, let Excel calculate them!
+            }
+            else if (has('lti') || has('lost time')) { inject(D.lag[1].monthly); }
+            else if (has('rwc') || has('restricted work')) { inject(D.lag[2].monthly); }
+            else if (has('mti') || has('medical treat')) { inject(D.lag[3].monthly); }
+            else if (has('fatal')) { inject(D.lag[4].monthly); }
+            else if ((has('fire') && !has('drill')) || has('spark')) { inject(D.lag[5].monthly); }
+            else if (has('dangerous occur')) { inject(D.lag[6].monthly); }
+
+            else if (has('near miss')) { inject(D.lead[0].monthly); }
+            else if (has('investigation clos')) { inject(D.lead[1].monthly); }
+            else if (has('unsafe act')) { inject(D.lead[2].monthly); }
+            else if (has('safety round') || has('leadership')) { inject(D.lead[3].monthly); }
+            else if (has('corporate safety') || (has('corp obs') && !has('clos'))) { inject(D.lead[4].monthly); }
+            else if (has('corp obs clos')) { inject(D.lead[5].monthly); }
+            else if (has('action plan clos')) { inject(D.lead[6].monthly); }
+            else if (has('ptw height') || has('ptw hot')) { inject(D.lead[7].monthly); }
+            else if (has('ptw general')) { inject(D.lead[8].monthly); }
+            else if (has('third party audit')) { inject(D.lead[9].monthly); }
+            else if (has('training manhour') || has('safety training')) { inject(D.lead[10].monthly); }
+            else if (has('machine guard') || has('mmi')) { inject(D.lead[11].monthly); }
+            else if (has('bbs') || has('behavior')) { inject(D.lead[12].monthly); }
+
+            else if (has('mock drill') && !has('clos')) { inject(D.culture[0].monthly); }
+            else if (has('fire drill')) { inject(D.culture[1].monthly); }
+            else if (has('mock drill') && has('clos')) { inject(D.culture[2].monthly); }
+            else if (has('safety committee') && !has('clos')) { inject(D.culture[3].monthly); }
+            else if (has('committee') && has('clos')) { inject(D.culture[4].monthly); }
+            else if (has('safety obs') && has('clos')) { inject(D.culture[5].monthly); }
+            else if (has('reward') || has('recognition')) { inject(D.culture[6].monthly); }
+            else if (has('disciplin')) { inject(D.culture[7].monthly); }
+        });
+        
+        // Write out the modified buffer
+        const outBuffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([outBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Dhanuka_Kavach_${(D.primary.fy || 'Scorecard').replace(/[^a-z0-9]/gi, '_')}.xlsx`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+        
+        toast('✅ Excel exported with 100% exact formatting!', 'ok');
+        
+    } catch(e) {
+        console.error(e);
+        toast('❌ Error generating export.', 'err');
+    }
+}
+
+// ── THEME ──────────────────────────────────────
+function setTheme(t,btn){
+  document.documentElement.setAttribute('data-theme',t);
+  document.querySelectorAll('.thm-b').forEach(b=>b.classList.remove('on'));
+  if(btn)btn.classList.add('on');else{const m={light:0,ocean:1,dark:2};document.querySelectorAll('.thm-b')[m[t]]?.classList.add('on');}
+  localStorage.setItem('siq_t',t);
+  setTimeout(renderActive,100);
+}
+
+// ── NAV ──────────────────────────────────────
+const PTITLES={exec:'Executive Overview',lag:'Lag Indicators',lead:'Lead Indicators',cmp:'Comparison',fcast:'Forecast',entry:'Data Entry',cfg:'Settings'};
+function nav(id,btn){
+  document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.sb-btn').forEach(b=>b.classList.remove('on'));
+  $('p-'+id).classList.add('on');
+  if(btn)btn.classList.add('on');
+  $('pgT').textContent=PTITLES[id]||id;
+  setTimeout(()=>renderPage(id),50);
+}
+function renderActive(){const a=document.querySelector('.pg.on');if(a)renderPage(a.id.replace('p-',''));}
+function renderPage(id){if(id==='exec')rExec();if(id==='lag')rLag();if(id==='lead')rLead();if(id==='cmp')rCmp();if(id==='fcast')rFcast();if(id==='entry')rEntry();}
+
+// ── CHART FACTORY ──────────────────────────────
+const CH={};
+function mk(id,cfg){
+  if(CH[id]){try{CH[id].destroy();}catch(e){}delete CH[id];}
+  const el=$(id);if(!el)return;
+  const cs=getComputedStyle(document.documentElement);
+  const tc=cs.getPropertyValue('--t2').trim()||'#5B6278';
+  const gc=cs.getPropertyValue('--border').trim()||'#E8EBF2';
+  function inj(s){if(!s)return;if(s.grid===undefined)s.grid={};s.grid.color=gc;if(s.ticks===undefined)s.ticks={};s.ticks.color=tc;s.ticks.font={family:'Inter',size:11};if(s.title)s.title.color=tc;}
+  if(cfg.options?.scales)Object.values(cfg.options.scales).forEach(inj);
+  if(cfg.options?.plugins?.legend?.labels){cfg.options.plugins.legend.labels.color=tc;cfg.options.plugins.legend.labels.font={family:'Inter',size:11.5};cfg.options.plugins.legend.labels.padding=14;cfg.options.plugins.legend.labels.usePointStyle=true;}
+  CH[id]=new Chart(el,cfg);return CH[id];
+}
+const P=['#6366F1','#0EA5E9','#10B981','#F59E0B','#F43F5E','#8B5CF6','#D946EF'];
+const CA=(i,a)=>P[i%P.length].replace('#','rgba(').replace(/(..)(..)(..)$/,(_,r,g,b)=>`${parseInt(r,16)},${parseInt(g,16)},${parseInt(b,16)},${a||1})`);
+
+// Animation util
+const anm=(id,to,dec=0)=>{
+    const el=$(id);if(!el)return;
+    const s=performance.now();
+    (function r(n){
+        const t=Math.min(1,(n-s)/600);
+        const e=1-Math.pow(1-t,3);
+        el.textContent=(to*e).toFixed(dec);
+        if(t<1) requestAnimationFrame(r);
+        else el.textContent = to.toFixed(dec);
+    })(s);
+};
+
+// ── EXECUTIVE ──────────────────────────────────
+function rExec(){
+  $('fyTag').textContent = D.primary.fy || 'FY Scorecard';
+  $('monthRangeLbl').textContent = `Apr - Mar`;
+
+  const fatals = S(D.lag[4].monthly);
+  const ltis = S(D.lag[1].monthly);
+  const rc = S(D.primary.recordable); 
+  const firstAids = S(D.lag[0].monthly);
+  const manhourTotal = S(D.primary.manhours);
+  const tfairTarget = D.lag[0].target || 0.86;
+  const tfair = manhourTotal > 0 ? (firstAids * 200000 / manhourTotal) : 0;
+  const trir = manhourTotal > 0 ? (rc * 200000 / manhourTotal) : 0;
+  
+  const alertEl = $('topAlert');
+  if (manhourTotal === 0) {
+      alertEl.className = 'alert alert-ok';
+      alertEl.innerHTML = `⚠️  <strong>Dashboard is Blank.</strong> Click 'Upload Excel' and select your scorecard to begin.`;
+  } else if (fatals === 0 && ltis === 0 && rc === 0) {
+      alertEl.className = 'alert alert-ok';
+      alertEl.innerHTML = `✅  <strong>Zero Fatalities · Zero LTI · Zero Recordable Cases</strong> — ${D.primary.fy}`;
+  } else {
+      alertEl.className = 'alert alert-warn';
+      alertEl.innerHTML = `⚠️  <strong>Alert:</strong> ${fatals} Fatalities · ${ltis} LTI · ${rc} Recordable Cases — ${D.primary.fy}`;
+  }
+
+  anm('kn1', firstAids);
+  anm('kn2', rc);
+  $('kn2_b').innerHTML = rc === 0 ? '✓ Zero' : '! Alert';
+  $('kn2_b').className = rc === 0 ? 'b bg' : 'b br';
+  
+  anm('kn3', Math.round(manhourTotal/1000));
+  anm('kn4', tfair, 2);
+  anm('kn5', trir, 2); 
+  $('tfairTgt').textContent = `Target: ${tfairTarget}`;
+  $('tfairSub').textContent = `vs Target ${tfairTarget}`;
+
+  const mh=D.primary.manhours, fa=D.lag[0].monthly;
+  mk('cET',{type:'bar',data:{labels:MO.slice(0,11),datasets:[
+    {label:'Manhours',data:mh.slice(0,11),backgroundColor:'rgba(14,165,233,.15)',borderColor:'rgba(14,165,233,1)',borderWidth:2,borderRadius:5,yAxisID:'yA',order:2},
+    {label:'First Aid',data:fa.slice(0,11),type:'line',borderColor:'#F43F5E',backgroundColor:'rgba(244,63,94,.08)',borderWidth:2.5,pointBackgroundColor:'#F43F5E',pointRadius:4,yAxisID:'yB',order:1,tension:.4,fill:true}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{}}},scales:{x:{},yA:{position:'left',title:{display:true,text:'Manhours',font:{size:10}}},yB:{position:'right',grid:{drawOnChartArea:false},min:0,suggestedMax:4,title:{display:true,text:'Incidents',font:{size:10}}}}}});
+
+  const ICO=['🩹','🦽','🩼','💊','💀','🔥','⚠️'];
+  $('lagMR').innerHTML=D.lag.map((l,i)=>{const ytd=S(l.monthly);const ok=ytd===0;return`<div class="mr"><div class="mr-ico" style="background:${ok?'var(--emerald-s)':'var(--rose-s)'}">${ICO[i]}</div><div class="mr-inf"><div class="mr-n">${l.name}</div><div class="mr-s">Prev FY: ${l.prev||0}</div></div><div class="mr-v" style="color:${ok?'var(--emerald)':'var(--rose)'}">${ytd}</div><span class="b ${ok?'bg':'br'}">${ok?'✓':'!'}</span></div>`;}).join('');
+
+  mk('cER',{type:'radar',data:{labels:['Near Miss','Unsafe Acts','Rounds','PTW','Training','BBS','Audits'],datasets:[{label:'Achievement %',data:[
+      (S(D.lead[0].monthly)/(D.lead[0].target||1)*100),
+      (S(D.lead[2].monthly)/(D.lead[2].target||1)*100),
+      (S(D.lead[3].monthly)/(D.lead[3].target||1)*100),
+      (S(D.lead[8].monthly)/(D.lead[8].target||1)*100),
+      (S(D.lead[10].monthly)/(D.lead[10].target||1)*100),
+      (S(D.lead[12].monthly)/(D.lead[12].target||1)*100),
+      (S(D.lead[9].monthly)/(D.lead[9].target||1)*100)
+  ].map(v=>Math.min(160, v||0)),backgroundColor:'rgba(99,102,241,.12)',borderColor:'#6366F1',pointBackgroundColor:'#6366F1',pointRadius:4,borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{r:{grid:{color:'var(--border)'},ticks:{backdropColor:'transparent',font:{size:9}},pointLabels:{font:{family:'Inter',size:10}}}}}});
+
+  $('cmpList').innerHTML=[
+    {n:'PTW (Height/Hot)',v:S(D.lead[7].monthly),t:D.lead[7].target},
+    {n:'PTW (General)',v:S(D.lead[8].monthly),t:D.lead[8].target},
+    {n:'Third Party Audit',v:S(D.lead[9].monthly),t:D.lead[9].target},
+    {n:'Investigation Closure',v:S(D.lead[1].monthly),t:D.lead[1].target},
+    {n:'BBS Observations',v:S(D.lead[12].monthly),t:D.lead[12].target},
+    {n:'Corp Obs Closure',v:S(D.lead[5].monthly),t:D.lead[5].target},
+    {n:'Safety Obs Closure',v:S(D.culture[5].monthly),t:D.culture[5].target}
+  ].map(c=>{
+      let t = parseFloat(c.t)||0; 
+      let v = parseFloat(c.v)||0;
+      let pct = t>0 ? (v/t*100) : v;
+      if(t===0 && v>0) pct = 100;
+      const ok=pct>=100, near=pct>=90;
+      return`<div style="margin-bottom:11px"><div class="flex aic jsb mb8"><span class="fs12 c2">${c.n}</span><span class="b ${ok?'bg':near?'ba':'br'}">${pct.toFixed(1)}%</span></div><div class="prg"><div class="prf ${ok?'pfg':near?'pfa':'pfr'}" style="width:${Math.min(100,pct)}%"></div></div></div>`;
+  }).join('');
+
+  $('heatEl').innerHTML=`<div class="fs11 c3 mb8 fw7">Monthly First Aid</div><div style="display:flex;gap:4px;flex-wrap:wrap">${MO.map((m,i)=>{const v=D.lag[0].monthly[i];const cl=v===null?'hcn':v===0?'hcz':v===1?'hc1':'hc2';return`<div style="text-align:center"><div class="hc ${cl}">${v===null?'—':v}</div><div class="fs10 c3" style="margin-top:2px">${m}</div></div>`;}).join('')}</div><div style="font-size:10px;color:var(--t3);margin-top:7px">🟢 Zero  🟡 1  🔴 2+</div>`;
+
+  mk('cNMm',{type:'line',data:{labels:MO.slice(0,11),datasets:[{data:D.lead[0].monthly.slice(0,11),borderColor:'#6366F1',backgroundColor:'rgba(99,102,241,.08)',tension:.4,fill:true,pointRadius:3,pointBackgroundColor:'#6366F1'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{},y:{min:0}}}});
+
+  const tf=D.primary.manhours.slice(0,11).map((m,i)=>m>0?(D.lag[0].monthly[i]||0)*200000/m:0);
+  mk('cTF',{type:'line',data:{labels:MO.slice(0,11),datasets:[{label:'TFAIR',data:tf,borderColor:'#6366F1',backgroundColor:'rgba(99,102,241,.08)',borderWidth:2.5,tension:.4,fill:true,pointBackgroundColor:'#6366F1',pointRadius:4},{label:'Target ' + tfairTarget,data:Array(11).fill(tfairTarget),borderColor:'#F43F5E',borderDash:[5,4],borderWidth:1.5,pointRadius:0,fill:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{}}},scales:{x:{},y:{}}}});
+
+  const tr=D.lead[10].monthly.slice(0,11);
+  const trTotal = S(tr);
+  const trTarget = D.lead[10].target || 0;
+  const moTarget = trTarget ? Math.round(trTarget / 12) : 0;
+  $('trainTitle').textContent = `YTD ${trTotal} hrs — Target ${trTarget}`;
+  mk('cTR',{type:'bar',data:{labels:MO.slice(0,11),datasets:[{label:'Training Hrs',data:tr,backgroundColor:tr.map(v=>v>=moTarget?'rgba(16,185,129,.65)':'rgba(99,102,241,.55)'),borderRadius:5},{label:'Monthly Target',data:Array(11).fill(moTarget),type:'line',borderColor:'#F59E0B',borderDash:[5,4],borderWidth:1.5,pointRadius:0,fill:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{}}},scales:{x:{},y:{}}}});
+
+  $('lTbl').innerHTML=[...D.lead,...D.culture].map((item,i)=>{const ytd=S(item.monthly);const t=parseFloat(item.target);let pct=null;if(!isNaN(t)&&t>0)pct=ytd/t*100;const bc=pct===null?'bi':pct>=100?'bg':pct>=90?'ba':'br';const pcls=pct===null?'pfi':pct>=100?'pfg':pct>=90?'pfa':'pfr';return`<tr><td class="mono c3" style="font-size:10.5px">${i+1}</td><td style="font-weight:500">${item.name}</td><td class="mono c2">${item.target||'—'}</td><td class="mono fw7">${ytd}</td><td class="mono">${pct===null?'—':pct.toFixed(0)+'%'}</td><td><span class="b ${bc}">${pct===null?'N/A':pct>=100?'✓ Met':pct>=90?'Near':'Risk'}</span></td><td style="min-width:90px"><div class="prg"><div class="prf ${pcls}" style="width:${Math.min(100,pct||0)}%"></div></div></td></tr>`;}).join('');
+}
+
+// ── LAG ──────────────────────────────────────
+function rLag(){
+  const ICO=['🩹','🦽','🩼','💊','💀','🔥','⚠️'];
+  $('lagRow').innerHTML=D.lag.map((l,i)=>{const ytd=S(l.monthly);const ok=ytd===0;return`<div class="lkpi" style="border-top:3px solid ${ok?'var(--emerald)':'var(--rose)'}"><div class="lkpi-em">${ICO[i]}</div><div class="lkpi-v" style="color:${ok?'var(--emerald)':'var(--rose)'}">${ytd}</div><div class="lkpi-n">${l.name}</div><div style="margin-top:7px"><span class="b ${ok?'bg':'br'}">${ok?'✓ Zero':'Review'}</span></div></div>`;}).join('');
+
+  mk('cLB',{type:'bar',data:{labels:MO.slice(0,11),datasets:D.lag.map((l,i)=>({label:l.name.split('(')[0].trim(),data:l.monthly.slice(0,11),backgroundColor:`${CA(i,.65)}`,borderRadius:4}))},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{}}},scales:{x:{stacked:true},y:{stacked:true}}}});
+
+  const ytds=D.lag.map(l=>Math.max(.001,S(l.monthly)));
+  mk('cLD',{type:'doughnut',data:{labels:D.lag.map(l=>l.name),datasets:[{data:ytds,backgroundColor:P.map(c=>c+'CC'),borderWidth:2,borderColor:'var(--surface)',hoverOffset:5}]},options:{responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{legend:{position:'right',labels:{}}}}});
+
+  $('lTH').innerHTML=`<tr><th>Indicator</th>${MO.slice(0,11).map(m=>`<th>${m}</th>`).join('')}<th>YTD</th><th>Prev</th></tr>`;
+  $('lTB').innerHTML=D.lag.map(l=>{const ytd=S(l.monthly);return`<tr><td style="font-weight:600;white-space:nowrap">${l.name}</td>${l.monthly.slice(0,11).map(v=>`<td class="mono" style="text-align:center;color:${v>0?'var(--rose)':'var(--emerald)'}">${v===null?'—':v}</td>`).join('')}<td class="mono fw7" style="text-align:center;color:${ytd>0?'var(--rose)':'var(--emerald)'}">${ytd}</td><td class="mono c2" style="text-align:center">${l.prev||0}</td></tr>`;}).join('');
+
+  const tf=D.primary.manhours.slice(0,11).map((m,i)=>m>0?(D.lag[0].monthly[i]||0)*200000/m:0);
+  const tfairTarget = D.lag[0].target || 0.86;
+  mk('cLR',{type:'line',data:{labels:MO.slice(0,11),datasets:[{label:'TFAIR',data:tf,borderColor:'#6366F1',backgroundColor:'rgba(99,102,241,.08)',tension:.4,fill:true,borderWidth:2.5,pointRadius:4},{label:'TRIR',data:Array(11).fill(0),borderColor:'#10B981',backgroundColor:'rgba(16,185,129,.08)',tension:.4,fill:true,borderWidth:2.5,pointRadius:4},{label:'Target '+tfairTarget,data:Array(11).fill(tfairTarget),borderColor:'#F43F5E',borderDash:[5,4],borderWidth:1.5,pointRadius:0,fill:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{}}},scales:{x:{},y:{}}}});
+}
+
+// ── LEAD ──────────────────────────────────────
+function rLead(){
+  let totalPct = 0; let count = 0;
+  D.lead.forEach(l => {
+      const t = parseFloat(l.target);
+      if(t > 0) { totalPct += Math.min(100, S(l.monthly)/t*100); count++; }
+  });
+  const ggVal = count > 0 ? (totalPct/count).toFixed(1) : 0;
+  $('gnVal').textContent = ggVal + '%';
+  drawGauge('cGG', ggVal, '#10B981');
+  
+  mk('cLRad',{type:'radar',data:{labels:D.lead.slice(0,7).map(l=>l.name.substring(0,16)),datasets:[{label:'Achievement %',data:D.lead.slice(0,7).map(l=>{const t=parseFloat(l.target);const y=S(l.monthly);return t>0?Math.min(160,y/t*100):100;}),backgroundColor:'rgba(16,185,129,.12)',borderColor:'#10B981',pointBackgroundColor:'#10B981',pointRadius:4,borderWidth:2},{label:'Target (100%)',data:Array(7).fill(100),backgroundColor:'transparent',borderColor:'rgba(245,158,11,.6)',borderDash:[4,4],borderWidth:1.5,pointRadius:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{}}},scales:{r:{grid:{color:'var(--border)'},ticks:{backdropColor:'transparent',font:{size:9}},pointLabels:{font:{family:'Inter',size:10}}}}}});
+  
+  $('nmTot').textContent = `YTD: ${S(D.lead[0].monthly)}`;
+  mk('cLNM',{type:'bar',data:{labels:MO.slice(0,11),datasets:[{label:'Near Miss',data:D.lead[0].monthly.slice(0,11),backgroundColor:'rgba(14,165,233,.6)',borderRadius:5,borderColor:'rgba(14,165,233,1)',borderWidth:1}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{},y:{min:0}}}});
+  
+  const uaTgt = D.lead[2].target || 0;
+  $('uaTot').textContent = `${S(D.lead[2].monthly)} vs Target`;
+  mk('cUA',{type:'bar',data:{labels:MO.slice(0,11),datasets:[{label:'Identified',data:D.lead[2].monthly.slice(0,11),backgroundColor:'rgba(16,185,129,.6)',borderRadius:5},{label:'Monthly Target',data:Array(11).fill(uaTgt?Math.round(uaTgt/12):0),type:'line',borderColor:'rgba(245,158,11,.8)',borderDash:[5,4],borderWidth:1.5,pointRadius:0,fill:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{}}},scales:{x:{},y:{}}}});
+  
+  $('ldH').innerHTML=`<tr><th>Indicator</th><th>Target</th>${MO.slice(0,11).map(m=>`<th>${m}</th>`).join('')}<th>YTD</th><th>Status</th></tr>`;
+  $('ldB').innerHTML=D.lead.map(l=>{const ytd=S(l.monthly);const t=parseFloat(l.target);const pct=t>0?ytd/t*100:100;const bc=pct>=100?'bg':pct>=90?'ba':'br';return`<tr><td style="white-space:nowrap;font-size:11.5px;font-weight:500">${l.name}</td><td class="mono c2" style="text-align:center">${l.target||'—'}</td>${l.monthly.slice(0,11).map(v=>`<td class="mono" style="text-align:center;font-size:11px">${v===null?'—':typeof v==='number'&&v%1!==0?v.toFixed(1):v}</td>`).join('')}<td class="mono fw7" style="text-align:center">${ytd}</td><td><span class="b ${bc}">${pct>=100?'✓':pct>=90?'~':'↓'}</span></td></tr>`;}).join('');
+  $('cultEl').innerHTML=D.culture.map(c=>{const ytd=S(c.monthly);const t=typeof c.target==='number'?c.target:null;const pct=t?Math.min(100,ytd/t*100):null;const col=pct===null?'var(--t2)':pct>=100?'var(--emerald)':pct>=90?'var(--amber)':'var(--rose)';return`<div class="mr"><div class="mr-inf"><div class="mr-n">${c.name}</div><div class="mr-s">Target: ${c.target||'—'}</div></div><div style="font-family:'Manrope',sans-serif;font-size:19px;font-weight:800;color:${col}">${ytd}</div></div>`;}).join('');
+  mk('cDr',{type:'bar',data:{labels:MO.slice(0,11),datasets:[{label:'Mock Drills',data:D.culture[0].monthly.slice(0,11),backgroundColor:'rgba(99,102,241,.65)',borderRadius:4},{label:'Fire Drills',data:D.culture[1].monthly.slice(0,11),backgroundColor:'rgba(14,165,233,.65)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{}}},scales:{x:{},y:{min:0,suggestedMax:3}}}});
+}
+function drawGauge(id,val,color){const c=$(id);if(!c)return;const ctx=c.getContext('2d');c.width=220;c.height=130;ctx.clearRect(0,0,220,130);const bg=getComputedStyle(document.documentElement).getPropertyValue('--surface2').trim()||'#F0F2F8';ctx.beginPath();ctx.arc(110,110,80,-Math.PI,0,false);ctx.lineWidth=13;ctx.strokeStyle=bg;ctx.lineCap='round';ctx.stroke();ctx.beginPath();ctx.arc(110,110,80,-Math.PI,-Math.PI+(val/100)*Math.PI,false);ctx.lineWidth=13;ctx.strokeStyle=color;ctx.lineCap='round';ctx.stroke();}
+
+// ── COMPARE ──────────────────────────────────
+function rCmp(){
+  const m1=parseInt($('cm1').value),m2=parseInt($('cm2').value);
+  const inds=[...D.lag,...D.lead.slice(0,5)];
+  $('cmpCards').innerHTML=[m1,m2].map(mi=>`<div class="card card-flush"><div class="cmp-h"><div class="cmp-m">${MOF[mi]}</div><span class="b bi">${MO[mi]}</span></div>${inds.map(ind=>`<div class="cmp-r"><div class="cmp-n">${ind.name}</div><div class="cmp-v">${ind.monthly[mi]===null?'—':ind.monthly[mi]}</div></div>`).join('')}</div>`).join('');
+  const lbls=['First Aid','Near Miss','Unsafe Acts','Training','Manhours K'];
+  const g=(src,mi)=>(src[mi]||0);
+  const v1=[g(D.lag[0].monthly,m1),g(D.lead[0].monthly,m1),g(D.lead[2].monthly,m1),g(D.lead[10].monthly,m1),Math.round(g(D.primary.manhours,m1)/1000)];
+  const v2=[g(D.lag[0].monthly,m2),g(D.lead[0].monthly,m2),g(D.lead[2].monthly,m2),g(D.lead[10].monthly,m2),Math.round(g(D.primary.manhours,m2)/1000)];
+  mk('cCB',{type:'bar',data:{labels:lbls,datasets:[{label:MOF[m1],data:v1,backgroundColor:'rgba(99,102,241,.7)',borderRadius:6},{label:MOF[m2],data:v2,backgroundColor:'rgba(14,165,233,.7)',borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{}}},scales:{x:{},y:{}}}});
+  const cQ=(a,s)=>a.slice(s,s+3).filter(v=>v!==null).reduce((a,b)=>a+b,0);
+  mk('cQtr',{type:'bar',data:{labels:['Q1 Apr–Jun','Q2 Jul–Sep','Q3 Oct–Dec'],datasets:[{label:'First Aid',data:[cQ(D.lag[0].monthly,0),cQ(D.lag[0].monthly,3),cQ(D.lag[0].monthly,6)],backgroundColor:'rgba(244,63,94,.7)',borderRadius:6},{label:'Near Miss',data:[cQ(D.lead[0].monthly,0),cQ(D.lead[0].monthly,3),cQ(D.lead[0].monthly,6)],backgroundColor:'rgba(14,165,233,.7)',borderRadius:6},{label:'Unsafe Acts ÷10',data:[Math.round(cQ(D.lead[2].monthly,0)/10),Math.round(cQ(D.lead[2].monthly,3)/10),Math.round(cQ(D.lead[2].monthly,6)/10)],backgroundColor:'rgba(16,185,129,.7)',borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{}}},scales:{x:{},y:{}}}});
+  mk('cFYC',{type:'bar',data:{labels:['First Aid','LTI','Fire Incidents','Near Miss'],datasets:[{label:'Prev FY',data:[D.lag[0].prev||0, D.lag[1].prev||0, D.lag[5].prev||0, D.lead[0].prev||0],backgroundColor:'rgba(139,92,246,.45)',borderRadius:6},{label:'Current YTD',data:[S(D.lag[0].monthly),S(D.lag[1].monthly),S(D.lag[5].monthly),S(D.lead[0].monthly)],backgroundColor:'rgba(16,185,129,.7)',borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{}}},scales:{x:{},y:{}}}});
+}
+
+// ── FORECAST ──────────────────────────────────
+function linReg(arr){const pts=arr.map((v,i)=>[i,v]).filter(([,v])=>v!==null);if(pts.length<2)return{m:0,b:AVG(arr.filter(v=>v!==null))};const n=pts.length,sx=pts.reduce((a,[x])=>a+x,0),sy=pts.reduce((a,[,y])=>a+y,0),sxy=pts.reduce((a,[x,y])=>a+x*y,0),sxx=pts.reduce((a,[x])=>a+x*x,0);const m=(n*sxy-sx*sy)/(n*sxx-sx*sx),b=(sy-m*sx)/n;return{m,b};}
+function rFcast(){
+  const labs=[...MO.slice(0,11),'Mar*','Apr*','May*'];
+  const tfairTarget = D.lag[0].target || 0.86;
+  [{id:'cFTF',data:D.primary.manhours.slice(0,11).map((m,i)=>m>0?(D.lag[0].monthly[i]||0)*200000/m:0),lbl:'TFAIR',col:'#6366F1',tgt:tfairTarget},{id:'cFNM',data:D.lead[0].monthly.slice(0,11),lbl:'Near Miss',col:'#0EA5E9'},{id:'cFTR',data:D.lead[10].monthly.slice(0,11),lbl:'Training Hrs',col:'#10B981'},{id:'cFUA',data:D.lead[2].monthly.slice(0,11),lbl:'Unsafe Acts',col:'#8B5CF6'},{id:'cFMH',data:D.primary.manhours.slice(0,11).map(v=>v?Math.round(v/1000):null),lbl:'Manhours K',col:'#0EA5E9'}].forEach(({id,data,lbl,col,tgt})=>{
+    const reg=linReg(data);const fc=[reg.m*11+reg.b,reg.m*12+reg.b,reg.m*13+reg.b].map(v=>Math.max(0,Math.round(v*100)/100));
+    const ds=[{label:lbl,data:[...data,null,null,null],borderColor:col,backgroundColor:col.replace('#','rgba(').replace(/(..)(..)(..)$/,(_,r,g,b)=>`${parseInt(r,16)},${parseInt(g,16)},${parseInt(b,16)},.1)`),borderWidth:2.5,tension:.4,fill:true,pointRadius:3},{label:'Forecast',data:[...Array(11).fill(null),...fc],borderColor:col,borderDash:[6,4],borderWidth:2,pointRadius:4,pointStyle:'triangle',fill:false}];
+    if(tgt)ds.push({label:`Target (${tgt})`,data:Array(14).fill(tgt),borderColor:'#F43F5E',borderDash:[4,4],borderWidth:1.5,pointRadius:0,fill:false});
+    mk(id,{type:'line',data:{labels:labs,datasets:ds},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{}}},scales:{x:{},y:{}}}});
+  });
+}
+
+// ── ENTRY ──────────────────────────────────────
+function rEntry(){
+  const fields=[{id:'fa',l:'First Aid Injuries'},{id:'rc',l:'Recordable Cases'},{id:'mh',l:'Manhours Worked'},{id:'nm',l:'Near Miss'},{id:'ua',l:'Unsafe Acts'},{id:'tm',l:'Training Manhours'},{id:'mo',l:'Mock Drills'},{id:'fo',l:'Fire Drills'}];
+  $('eFields').innerHTML=fields.map(f=>`<div class="fg"><label class="fl">${f.l}</label><input class="fi" type="number" id="ef_${f.id}" placeholder="0" min="0"></div>`).join('');
+  rGrid();rRec();
+}
+function saveMo(){
+  const mi=parseInt($('eM').value);
+  const g=id=>{const v=$('ef_'+id)?.value;return v===''||v===undefined?null:parseFloat(v);};
+  if(g('fa')!==null){D.lag[0].monthly[mi]=g('fa');D.primary.first_aid[mi]=g('fa');}
+  if(g('rc')!==null)D.primary.recordable[mi]=g('rc');if(g('mh')!==null)D.primary.manhours[mi]=g('mh');
+  if(g('nm')!==null)D.lead[0].monthly[mi]=g('nm');if(g('ua')!==null)D.lead[2].monthly[mi]=g('ua');
+  if(g('tm')!==null)D.lead[10].monthly[mi]=g('tm');if(g('mo')!==null)D.culture[0].monthly[mi]=g('mo');if(g('fo')!==null)D.culture[1].monthly[mi]=g('fo');
+  saveData(true);rGrid();toast(`✅ ${MOF[mi]} saved locally!`,'ok');
+}
+function clearE(){document.querySelectorAll('[id^="ef_"]').forEach(el=>el.value='');}
+function rGrid(){
+  $('egH').innerHTML=`<tr><th>Indicator</th>${MO.map(m=>`<th>${m}</th>`).join('')}<th>YTD</th></tr>`;
+  const rows=[...D.lag,...D.lead.slice(0,5),...D.culture.slice(0,4)];
+  $('egB').innerHTML=rows.map((r,ri)=>`<tr><td style="font-size:11.5px;white-space:nowrap;font-weight:500;min-width:150px">${r.name}</td>${r.monthly.map((v,mi)=>`<td class="ec"><input type="number" value="${v===null?'':v}" onchange="cellCh(${ri},${mi},this.value)"></td>`).join('')}<td class="mono fw7" style="text-align:center">${S(r.monthly)}</td></tr>`).join('');
+}
+function cellCh(ri,mi,val){const rows=[...D.lag,...D.lead.slice(0,5),...D.culture.slice(0,4)];rows[ri].monthly[mi]=val===''?null:parseFloat(val);saveData(true);}
+function rRec(){
+  $('rrH').innerHTML=`<tr><th>Cat</th><th>Indicator</th><th>Prev FY</th><th>Target</th><th>YTD</th></tr>`;
+  let rows='';
+  [{cat:'LAG',items:D.lag},{cat:'LEAD',items:D.lead},{cat:'CULTURE',items:D.culture}].forEach(s=>{rows+=`<tr class="rh"><td colspan="5">${s.cat} INDICATORS</td></tr>`;rows+=s.items.map(item=>`<tr><td class="c3 fs10">${s.cat}</td><td style="font-weight:500">${item.name}</td><td class="mono c2" style="text-align:center">${item.prev??'—'}</td><td class="mono c2" style="text-align:center">${item.target??'—'}</td><td class="mono fw7" style="text-align:center">${S(item.monthly)}</td></tr>`).join('');});
+  $('rrB').innerHTML=rows;
+}
+function etab(tab,btn){document.querySelectorAll('[id^="et-"]').forEach(el=>el.style.display='none');$('et-'+tab).style.display='block';document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));if(btn)btn.classList.add('on');}
+function clearAll(){if(confirm('Clear all saved data and reset to Factory Defaults?')){localStorage.removeItem('siq_v10');localStorage.removeItem('siq_raw_excel');location.reload();}}
+
+// ── FIX HIGH-RES PDF EXPORT ────────────────────
+async function dlPDF(){
+    toast('📄 Generating High-Res PDF...','info');
+    try{
+        const {jsPDF} = window.jspdf;
+        const pdf = new jsPDF('l','mm','a4');
+        const el = document.getElementById('pdfArea');
+        
+        const canvas = await html2canvas(el,{
+            scale: 3, 
+            backgroundColor: '#FFFFFF', 
+            useCORS: true,
+            logging: false,
+            windowWidth: 1440 
+        });
+        
+        const img = canvas.toDataURL('image/png'); 
+        const pw = 297, ph = 210;
+        const r = Math.min((pw - 10)/canvas.width, (ph - 15)/canvas.height);
+        const nw = canvas.width*r, nh = canvas.height*r;
+        
+        pdf.addImage(img, 'PNG', (pw-nw)/2, ((ph-nh)/2)+2, nw, nh); 
+        pdf.setFontSize(8);
+        pdf.setTextColor(120,120,120);
+        pdf.text(`Dhanuka Kavach Scoreboard · ${D.primary.fy || 'Report'}`, pw/2, ph-5, {align:'center'});
+        pdf.save('Dhanuka_Kavach_Report.pdf');
+        
+        toast('✅ Crystal Clear PDF saved!','ok');
+    }catch(e){
+        toast('❌ PDF error: '+e.message,'err');
+    }
+}
+
+// ── TOAST ──────────────────────────────────────
+function toast(msg,type='info'){const s=$('ts');const t=document.createElement('div');t.className=`toast t${type}`;t.textContent=msg;s.appendChild(t);setTimeout(()=>{t.style.animation='tin .3s reverse';setTimeout(()=>t.remove(),280);},3600);}
+
+// ── INIT ──────────────────────────────────────
+document.addEventListener('DOMContentLoaded',()=>{
+  const th=localStorage.getItem('siq_t')||'light';
+  setTheme(th);
+  rExec();
+});
+</script>
+</body>
+</html>
